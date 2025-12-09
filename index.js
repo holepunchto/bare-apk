@@ -28,10 +28,12 @@ async function createAppBundle(manifest, out, opts = {}) {
 
     const archive = path.join(temp, 'base.zip')
 
-    await run('zip', ['-r', archive, '.'], { cwd: base })
+    await run('zip', ['-0', '-r', archive, '.'], { cwd: base })
 
     for (const resource of include) {
-      await run('zip', ['-r', archive, path.basename(resource)], { cwd: path.dirname(resource) })
+      await run('zip', ['-0', '-r', archive, path.basename(resource)], {
+        cwd: path.dirname(resource)
+      })
     }
 
     const aab = path.join(temp, 'base.aab')
