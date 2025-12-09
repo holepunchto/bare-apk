@@ -1,0 +1,65 @@
+{
+  "name": "bare-apk",
+  "version": "0.1.0",
+  "description": "APK packaging tools for Bare",
+  "exports": {
+    "./package": "./package.json",
+    ".": "./index.js"
+  },
+  "imports": {
+    "#aapt2": {
+      "darwin": "./prebuilds/darwin/aapt2",
+      "linux": {
+        "x64": "./prebuilds/linux-x64/aapt2"
+      },
+      "win32": {
+        "x64": "./prebuilds/win32-x64/aapt2.exe"
+      }
+    },
+    "#env": {
+      "bare": "./lib/env/bare.js",
+      "default": "./lib/env/node.js"
+    },
+    "child_process": {
+      "bare": "bare-subprocess",
+      "default": "child_process"
+    },
+    "fs": {
+      "bare": "bare-fs",
+      "default": "fs"
+    }
+  },
+  "files": [
+    "index.js",
+    "CMakeLists.txt",
+    "lib",
+    "prebuilds"
+  ],
+  "scripts": {
+    "test": "prettier . --check && bare test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/bare-apk.git"
+  },
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/bare-apk/issues"
+  },
+  "homepage": "https://github.com/holepunchto/bare-apk#readme",
+  "dependencies": {
+    "bare-env": "^3.0.0",
+    "bare-fs": "^4.5.2",
+    "bare-os": "^3.6.2",
+    "bare-path": "^3.0.0",
+    "bare-subprocess": "^5.2.1",
+    "require-asset": "^1.2.1"
+  },
+  "devDependencies": {
+    "brittle": "^3.18.0",
+    "cmake-fetch": "^1.4.0",
+    "prettier": "^3.4.1",
+    "prettier-config-holepunch": "^2.0.0"
+  }
+}
