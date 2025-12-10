@@ -32,12 +32,27 @@ async function createAppBundle(manifest, out, opts = {}) {
 
     const archive = path.join(temp, 'base.zip')
 
-    await run('zip', ['-0', '-r', archive, '.'], { cwd: base })
+    await run('jar', [
+      '--create',
+      '--no-compress',
+      '--no-manifest',
+      '--file',
+      archive,
+      '-C',
+      base,
+      '.'
+    ])
 
     for (const resource of include) {
-      await run('zip', ['-0', '-r', archive, path.basename(resource)], {
-        cwd: path.dirname(resource)
-      })
+      await run('jar', [
+        '--update',
+        '--no-compress',
+        '--file',
+        archive,
+        '-C',
+        path.dirname(resource),
+        path.basename(resource)
+      ])
     }
 
     await run('java', [
