@@ -17,7 +17,7 @@ exports.constants = {
 }
 
 async function createAppBundle(manifest, out, opts = {}) {
-  const { include = [] } = opts
+  const { targetSDK = DEFAULT_TARGET_SDK, include = [] } = opts
 
   out = path.resolve(out)
 
@@ -28,7 +28,7 @@ async function createAppBundle(manifest, out, opts = {}) {
   try {
     const base = path.join(temp, 'base')
 
-    await linkResources(manifest, base, { proto: true, archive: false })
+    await linkResources(manifest, base, { targetSDK, proto: true, archive: false })
 
     await fs.makeDir(path.join(base, 'manifest'))
 
