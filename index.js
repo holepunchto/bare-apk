@@ -12,6 +12,10 @@ const DEFAULT_TARGET_SDK = 36
 async function createAppBundle(manifest, out, opts = {}) {
   const { include = [] } = opts
 
+  out = path.resolve(out)
+
+  await fs.makeDir(path.dirname(out))
+
   const temp = await fs.tempDir()
 
   try {
@@ -36,8 +40,6 @@ async function createAppBundle(manifest, out, opts = {}) {
       })
     }
 
-    const aab = path.join(temp, 'base.aab')
-
     await run('java', [
       '-jar',
       bundletool,
@@ -45,10 +47,9 @@ async function createAppBundle(manifest, out, opts = {}) {
       '--modules',
       path.join(temp, 'base.zip'),
       '--output',
-      aab
+      out,
+      '--overwrite'
     ])
-
-    await fs.renameFile(aab, path.resolve(out))
   } finally {
     await fs.rm(temp)
   }
@@ -57,56 +58,60 @@ async function createAppBundle(manifest, out, opts = {}) {
 exports.createAppBundle = createAppBundle
 
 async function createAPKSet(bundle, out, opts = {}) {
-  const { universal = false, sign = false, keystore, keystoreKey, keystorePassword } = opts
+  const {
+    universal = false,
+    archive = true,
+    sign = false,
+    keystore,
+    keystoreKey,
+    keystorePassword
+  } = opts
 
-  const temp = await fs.tempDir()
+  out = path.resolve(out)
 
-  try {
-    const apks = path.join(temp, 'base.apks')
+  await fs.makeDir(path.dirname(out))
 
-    const args = [
-      '-jar',
-      bundletool,
-      'build-apks',
-      '--aapt2',
-      aapt2,
-      '--bundle',
-      path.resolve(bundle),
-      '--output',
-      apks
-    ]
+  const args = [
+    '-jar',
+    bundletool,
+    'build-apks',
+    '--aapt2',
+    aapt2,
+    '--bundle',
+    path.resolve(bundle),
+    '--output',
+    out
+  ]
 
-    if (universal) args.push('--mode', 'universal')
+  if (universal) args.push('--mode', 'universal')
 
-    if (sign) {
-      args.push('--ks', path.resolve(keystore), '--ks-pass', keystorePassword)
+  if (archive) args.push('--overwrite')
+  else args.push('--output-format', 'DIRECTORY')
 
-      if (keystoreKey) args.push('--ks-key-alias', keystoreKey)
-    }
+  if (sign) {
+    args.push('--ks', path.resolve(keystore), '--ks-pass', keystorePassword)
 
-    await run('java', args)
-
-    await fs.renameFile(apks, path.resolve(out))
-  } finally {
-    await fs.rm(temp)
+    if (keystoreKey) args.push('--ks-key-alias', keystoreKey)
   }
+
+  await run('java', args)
 }
 
 exports.createAPKSet = createAPKSet
 
 async function createAPK(bundle, out, opts = {}) {
-  const apk = path.resolve(out)
+  out = path.resolve(out)
+
+  await fs.makeDir(path.dirname(out))
 
   const temp = await fs.tempDir()
 
   try {
-    const apks = path.join(temp, 'base.apks')
+    const apks = path.join(temp, 'base')
 
-    await createAPKSet(bundle, apks, { ...opts, universal: true })
+    await createAPKSet(bundle, apks, { ...opts, universal: true, archive: false })
 
-    await run('unzip', [apks, 'universal.apk', '-d', temp])
-
-    await fs.renameFile(path.join(temp, 'universal.apk'), apk)
+    await fs.renameFile(path.join(temp, 'base', 'universal.apk'), out)
   } finally {
     await fs.rm(temp)
   }
@@ -116,6 +121,8 @@ exports.createAPK = createAPK
 
 async function linkResources(manifest, out, opts = {}) {
   const { targetSDK = DEFAULT_TARGET_SDK, proto = false, archive = true } = opts
+
+  out = path.resolve(out)
 
   const args = [
     'link',
