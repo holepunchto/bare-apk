@@ -36,6 +36,7 @@ Options include:
 ```js
 options = {
   universal: false,
+  archive: true,
   sign: false,
   keystore,
   keystoreKey,
@@ -55,6 +56,14 @@ options = {
   keystorePassword
 }
 ```
+
+#### `constants`
+
+| Constant              | Description                                |
+| :-------------------- | :----------------------------------------- |
+| `ANDROID_HOME`        | The Android SDK root directory.            |
+| `DEFAULT_MINIMUM_SDK` | The default minimum Android SDK API level. |
+| `DEFAULT_TARGET_SDK`  | The default target Android SDK API level.  |
 
 ## License
 
