@@ -7,7 +7,14 @@ const aapt2 = require('./lib/aapt2')
 const bundletool = require('./lib/bundletool')
 
 const ANDROID_HOME = env.ANDROID_HOME || path.join(os.homedir(), '.android/sdk')
+const DEFAULT_MINIMUM_SDK = 31
 const DEFAULT_TARGET_SDK = 36
+
+exports.constants = {
+  ANDROID_HOME,
+  DEFAULT_MINIMUM_SDK,
+  DEFAULT_TARGET_SDK
+}
 
 async function createAppBundle(manifest, out, opts = {}) {
   const { include = [] } = opts
