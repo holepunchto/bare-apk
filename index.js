@@ -152,7 +152,7 @@ exports.createAPK = createAPK
 async function compileResources(dir, out) {
   out = path.resolve(out)
 
-  const args = ['compile', '-o', out, '--dir', dir]
+  const args = ['compile', '-o', out, '--dir', path.resolve(dir)]
 
   await run(aapt2, args)
 }
@@ -167,7 +167,7 @@ async function linkResources(manifest, out, opts = {}) {
     '-o',
     out,
     '--manifest',
-    manifest,
+    path.resolve(manifest),
     '-I',
     path.join(ANDROID_HOME, 'platforms', `android-${targetSDK}`, 'android.jar')
   ]
