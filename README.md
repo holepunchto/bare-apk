@@ -26,7 +26,9 @@ Options include:
 options = {
   targetSDK: DEFAULT_TARGET_SDK,
   // Additional files and directories to include in uncompressed format
-  include: []
+  include: [],
+  // Resource directory to compile and compress
+  resources
 }
 ```
 

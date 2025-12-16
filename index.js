@@ -17,7 +17,7 @@ exports.constants = {
 }
 
 async function createAppBundle(manifest, out, opts = {}) {
-  const { targetSDK = DEFAULT_TARGET_SDK, include = [] } = opts
+  const { targetSDK = DEFAULT_TARGET_SDK, include = [], resources = null } = opts
 
   out = path.resolve(out)
 
@@ -26,9 +26,17 @@ async function createAppBundle(manifest, out, opts = {}) {
   const temp = await fs.tempDir()
 
   try {
+    let res
+
+    if (resources) {
+      res = path.join(temp, 'res.zip')
+
+      await compileResources(resources, res)
+    }
+
     const base = path.join(temp, 'base')
 
-    await linkResources(manifest, base, { targetSDK, proto: true, archive: false })
+    await linkResources(manifest, base, { targetSDK, resources: res, proto: true, archive: false })
 
     await fs.makeDir(path.join(base, 'manifest'))
 
@@ -141,8 +149,16 @@ async function createAPK(bundle, out, opts = {}) {
 
 exports.createAPK = createAPK
 
+async function compileResources(dir, out) {
+  out = path.resolve(out)
+
+  const args = ['compile', '-o', out, '--dir', dir]
+
+  await run(aapt2, args)
+}
+
 async function linkResources(manifest, out, opts = {}) {
-  const { targetSDK = DEFAULT_TARGET_SDK, proto = false, archive = true } = opts
+  const { targetSDK = DEFAULT_TARGET_SDK, resources = null, proto = false, archive = true } = opts
 
   out = path.resolve(out)
 
@@ -155,6 +171,8 @@ async function linkResources(manifest, out, opts = {}) {
     '-I',
     path.join(ANDROID_HOME, 'platforms', `android-${targetSDK}`, 'android.jar')
   ]
+
+  if (resources) args.push('-R', path.resolve(resources), '--auto-add-overlay')
 
   if (proto) args.push('--proto-format')
 
