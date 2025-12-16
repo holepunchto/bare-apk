@@ -17,7 +17,7 @@ exports.constants = {
 }
 
 async function createAppBundle(manifest, out, opts = {}) {
-  const { targetSDK = DEFAULT_TARGET_SDK, include = [], resources = null } = opts
+  const { targetSDK = DEFAULT_TARGET_SDK, include = [], resources } = opts
 
   out = path.resolve(out)
 
@@ -158,7 +158,7 @@ async function compileResources(dir, out) {
 }
 
 async function linkResources(manifest, out, opts = {}) {
-  const { targetSDK = DEFAULT_TARGET_SDK, resources = null, proto = false, archive = true } = opts
+  const { targetSDK = DEFAULT_TARGET_SDK, resources, proto = false, archive = true } = opts
 
   out = path.resolve(out)
 
