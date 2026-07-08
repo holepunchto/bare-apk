@@ -65,13 +65,13 @@
     "bare-fs": "^4.5.2",
     "bare-os": "^3.6.2",
     "bare-path": "^3.0.0",
-    "bare-subprocess": "^5.2.1",
+    "bare-subprocess": "^6.1.0",
     "require-asset": "^1.2.1"
   },
   "devDependencies": {
-    "brittle": "^3.18.0",
+    "brittle": "^4.1.0",
     "cmake-fetch": "^1.4.0",
-    "lunte": "^1.8.0",
+    "lunte": "^1.8.4",
     "prettier": "^3.4.1",
     "prettier-config-holepunch": "^2.0.0"
   }
