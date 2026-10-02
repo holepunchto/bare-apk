@@ -60,6 +60,10 @@ options = {
 }
 ```
 
+#### `const manifest = await readManifest(apk)`
+
+Read the manifest of the APK at `apk`. Returns an object with the `packageName`, `versionCode`, `versionName` and `launchableActivity` of the app, any of which is `null` if the manifest does not say.
+
 #### `constants`
 
 | Constant              | Description                                |
