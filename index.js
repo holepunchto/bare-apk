@@ -149,6 +149,30 @@ async function createAPK(bundle, out, opts = {}) {
 
 exports.createAPK = createAPK
 
+async function readManifest(apk) {
+  const output = await run(aapt2, ['dump', 'badging', path.resolve(apk)])
+
+  const lines = output.split(/\r?\n/)
+
+  const pkg = lines.find((line) => line.startsWith('package:')) || ''
+  const activity = lines.find((line) => line.startsWith('launchable-activity:')) || ''
+
+  return {
+    packageName: attribute(pkg, 'name'),
+    versionCode: attribute(pkg, 'versionCode'),
+    versionName: attribute(pkg, 'versionName'),
+    launchableActivity: attribute(activity, 'name')
+  }
+}
+
+exports.readManifest = readManifest
+
+function attribute(line, name) {
+  const match = new RegExp(`\\b${name}='([^']*)'`).exec(line)
+
+  return match === null ? null : match[1]
+}
+
 async function compileResources(dir, out) {
   out = path.resolve(out)
 
