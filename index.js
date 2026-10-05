@@ -5,6 +5,7 @@ const fs = require('./lib/fs')
 const run = require('./lib/run')
 const aapt2 = require('./lib/aapt2')
 const bundletool = require('./lib/bundletool')
+const buildTools = require('./lib/build-tools')
 
 const ANDROID_HOME = env.ANDROID_HOME || path.join(os.homedir(), '.android/sdk')
 const DEFAULT_MINIMUM_SDK = 31
@@ -55,20 +56,9 @@ async function createAppBundle(manifest, out, opts = {}) {
       archive,
       '-C',
       base,
-      '.'
+      '.',
+      ...included(include)
     ])
-
-    for (const resource of include) {
-      await run('jar', [
-        '--update',
-        '--no-compress',
-        '--file',
-        archive,
-        '-C',
-        path.dirname(resource),
-        path.basename(resource)
-      ])
-    }
 
     await run('java', [
       '-jar',
@@ -129,19 +119,80 @@ async function createAPKSet(bundle, out, opts = {}) {
 
 exports.createAPKSet = createAPKSet
 
-async function createAPK(bundle, out, opts = {}) {
+// Native libraries are stored uncompressed and aligned to 16 KB pages, so that
+// they are loaded straight from the APK.
+async function createAPK(manifest, out, opts = {}) {
+  const {
+    targetSDK = DEFAULT_TARGET_SDK,
+    include = [],
+    resources,
+    sign = false,
+    keystore,
+    keystoreKey,
+    keystorePassword
+  } = opts
+
   out = path.resolve(out)
 
   await fs.makeDir(path.dirname(out))
 
+  const { zipalign, apksigner } = await buildTools(ANDROID_HOME)
+
   const temp = await fs.tempDir()
 
   try {
-    const apks = path.join(temp, 'base')
+    let res
 
-    await createAPKSet(bundle, apks, { ...opts, universal: true, archive: false })
+    if (resources) {
+      res = path.join(temp, 'res.zip')
 
-    await fs.renameFile(path.join(temp, 'base', 'universal.apk'), out)
+      await compileResources(resources, res)
+    }
+
+    const unaligned = path.join(temp, 'unaligned.apk')
+
+    await linkResources(manifest, unaligned, { targetSDK, resources: res })
+
+    if (include.length > 0) {
+      await run('jar', [
+        '--update',
+        '--no-compress',
+        '--no-manifest',
+        '--file',
+        unaligned,
+        ...included(include)
+      ])
+    }
+
+    const aligned = path.join(temp, 'aligned.apk')
+
+    await run(zipalign, ['-P', '16', '-f', '4', unaligned, aligned])
+
+    // JAR signing is applied whatever the minimum SDK, though it is only verified
+    // below API level 24.
+    const v1 = (await minimumSDK(unaligned)) < 24
+
+    const args = [
+      '-jar',
+      apksigner,
+      'sign',
+      '--v1-signing-enabled',
+      String(v1),
+      '--v4-signing-enabled',
+      'false'
+    ]
+
+    if (sign) {
+      args.push('--ks', path.resolve(keystore), '--ks-pass', keystorePassword)
+
+      if (keystoreKey) args.push('--ks-key-alias', keystoreKey)
+    } else {
+      args.push('--ks', await debugKeystore(), '--ks-pass', 'pass:android')
+    }
+
+    args.push('--out', out, aligned)
+
+    await run('java', args)
   } finally {
     await fs.rm(temp)
   }
@@ -166,6 +217,49 @@ async function readManifest(apk) {
 }
 
 exports.readManifest = readManifest
+
+async function minimumSDK(apk) {
+  const output = await run(aapt2, ['dump', 'badging', apk])
+
+  const match = /^minSdkVersion:'(\d+)'/m.exec(output)
+
+  return match === null ? 1 : Number(match[1])
+}
+
+function included(include) {
+  return include.flatMap((resource) => ['-C', path.dirname(resource), path.basename(resource)])
+}
+
+// Created the way Android's own tools create it.
+async function debugKeystore() {
+  const keystore = path.join(os.homedir(), '.android', 'debug.keystore')
+
+  if (await fs.exists(keystore)) return keystore
+
+  await fs.makeDir(path.dirname(keystore))
+
+  await run('keytool', [
+    '-genkeypair',
+    '-keystore',
+    keystore,
+    '-storepass',
+    'android',
+    '-alias',
+    'androiddebugkey',
+    '-keypass',
+    'android',
+    '-keyalg',
+    'RSA',
+    '-keysize',
+    '2048',
+    '-validity',
+    '10000',
+    '-dname',
+    'CN=Android Debug,O=Android,C=US'
+  ])
+
+  return keystore
+}
 
 function attribute(line, name) {
   const match = new RegExp(`\\b${name}='([^']*)'`).exec(line)
