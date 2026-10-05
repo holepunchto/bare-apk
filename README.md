@@ -11,66 +11,12 @@ npm i bare-apk
 ```js
 const { createAppBundle, createAPK } = require('bare-apk')
 
+// For distribution through Google Play
 await createAppBundle('./path/to/AndroidManifest.xml', './app.aab')
 
-await createAPK('./app.aab', './app.apk')
+// For installing directly, such as during development
+await createAPK('./path/to/AndroidManifest.xml', './app.apk')
 ```
-
-## API
-
-#### `await createAppBundle(manifest, out[, options])`
-
-Options include:
-
-```js
-options = {
-  targetSDK: DEFAULT_TARGET_SDK,
-  // Additional files and directories to include in uncompressed format
-  include: [],
-  // Resource directory to compile and compress
-  resources
-}
-```
-
-#### `await createAPKSet(bundle, out[, options])`
-
-Options include:
-
-```js
-options = {
-  universal: false,
-  archive: true,
-  sign: false,
-  keystore,
-  keystoreKey,
-  keystorePassword
-}
-```
-
-#### `await createAPK(bundle, out[, options])`
-
-Options include:
-
-```js
-options = {
-  sign: false,
-  keystore,
-  keystoreKey,
-  keystorePassword
-}
-```
-
-#### `const manifest = await readManifest(apk)`
-
-Read the manifest of the APK at `apk`. Returns an object with the `packageName`, `versionCode`, `versionName` and `launchableActivity` of the app, any of which is `null` if the manifest does not say.
-
-#### `constants`
-
-| Constant              | Description                                |
-| :-------------------- | :----------------------------------------- |
-| `ANDROID_HOME`        | The Android SDK root directory.            |
-| `DEFAULT_MINIMUM_SDK` | The default minimum Android SDK API level. |
-| `DEFAULT_TARGET_SDK`  | The default target Android SDK API level.  |
 
 ## License
 

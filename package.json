@@ -4,7 +4,10 @@
   "description": "APK packaging tools for Bare",
   "exports": {
     "./package": "./package.json",
-    ".": "./index.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
   },
   "imports": {
     "#aapt2": {
@@ -39,6 +42,7 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "CMakeLists.txt",
     "lib",
     "prebuilds"
@@ -70,7 +74,9 @@
   },
   "devDependencies": {
     "brittle": "^4.1.0",
+    "cmake-android": "^0.1.7",
     "cmake-fetch": "^1.4.0",
+    "cmake-java": "^0.1.2",
     "lunte": "^1.8.4",
     "prettier": "^3.4.1",
     "prettier-config-holepunch": "^2.0.0"
