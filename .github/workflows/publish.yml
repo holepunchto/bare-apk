@@ -14,7 +14,5 @@ jobs:
     name: Publish
     steps:
       - uses: holepunchto/actions/node-base@v1
-      - run: npm install --global bare-make
-      - run: bare-make generate
-      - run: bare-make install
+      - uses: holepunchto/actions/compile-prebuilds@v1
       - uses: holepunchto/actions/publish@v1
